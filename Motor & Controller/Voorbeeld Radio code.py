@@ -67,6 +67,8 @@ def start_measurement_loop(ser):
 def main():
     ser = setup_serial()
     print("\nLuistert naar de radio. Stuur 'Start_Meten' of 'Stop_Meten' via PuTTY.")
+
+    global is_measuring
     
     while True:
         try:
@@ -83,10 +85,10 @@ def main():
                     # Start de metingen
                     start_measurement_loop(ser) 
                     
-                elif command == "Stop_Meten" and is_measuring:
+                elif command == "Stop_Meten":
                     # Zet de vlag om de meetlus te beëindigen
-                    global is_measuring
-                    is_measuring = False 
+                    if is_measuring:
+                        is_measuring = False
                 
                 elif command == "Status":
                     # Terugkoppeling sturen naar de laptop
