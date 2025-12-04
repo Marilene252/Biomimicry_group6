@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 import sys
-sys.path.append('/home/groep6/Biomimicry_group6/Sensors')
+sys.path.append('/home/marilene/github/Biomimicry_group6')
 from distance_sensor import get_distance_mm
 
 def grayscale(path):
@@ -133,18 +133,7 @@ def show_full_segmentation(path):
     plt.tight_layout()
     plt.show()
 
-
-    distance_mm = get_distance_mm()
-    sensor_width_mm = 7.9  # Raspberry Pi HQ camera sensor width (mm)
-    focal_length_mm = 6  # depends on lens (e.g., 6mm lens)
-    image_width_px = original.shape[1]
-
-    px_to_mm = compute_mm_per_pixel(
-        distance_mm,
-        sensor_width_mm,
-        focal_length_mm,
-        image_width_px
-    )
+    px_to_mm = compute_mm_per_pixel(get_distance_mm(), 7.9, 6, original.shape[1])
 
     print("\n--- REAL WORLD SCALE ---")
     print(f"mm per pixel: {px_to_mm:.6f} mm/px")
