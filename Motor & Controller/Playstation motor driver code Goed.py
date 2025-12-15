@@ -59,17 +59,17 @@ def set_motor_right(speed):
         #Vooruit
         GPIO.output(IN3, GPIO.HIGH)
         GPIO.output(IN4, GPIO.LOW)
-        pwm_ena.ChangeDutyCycle(speed)
+        pwm_enb.ChangeDutyCycle(speed)
     elif speed < 0:
         #Achteruit
         GPIO.output(IN3, GPIO.LOW)
         GPIO.output(IN4, GPIO.HIGH)
-        pwm_ena.ChangeDutyCycle (abs(speed))
+        pwm_enb.ChangeDutyCycle (abs(speed))
     else:
         #Stop
         GPIO.output(IN3, GPIO.LOW)
         GPIO.output(IN4, GPIO.LOW)
-        pwm_ena.ChangeDutyCycle(0)
+        pwm_enb.ChangeDutyCycle(0)
 
 class MyController(Controller):
 
@@ -132,7 +132,7 @@ class MyController(Controller):
         self.update_motors()
 
     def on_L3_press(self):
-        #Noodstop als de stick indrukt
+        #Noodstop als de stick wordt ingedrukt
         self.throttle = 0
         self.steering = 0
         self.update_motors()
