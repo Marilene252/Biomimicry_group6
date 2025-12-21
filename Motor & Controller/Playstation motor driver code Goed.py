@@ -29,82 +29,121 @@ pwm_enb = GPIO.PWM(ENB, 1000)
 pwm_ena.start(0)
 pwm_enb.start(0)
 
-def motor1_forward(speed):
-    GPIO.output(IN1, GPIO.HIGH)
-    GPIO.output(IN2, GPIO.LOW)
-    pwm_ena.ChangeDutyCycle(speed)
+def set_motor_left(speed):
+    """
+    Stuurt linker motoren aan
+    speed: waarde tussen -100 en 100
+    """
+    if speed > 0: 
+        #Vooruit
+        GPIO.output(IN1, GPIO.HIGH)
+        GPIO.output(IN2, GPIO.LOW)
+        pwm_ena.ChangeDutyCycle(speed)
+    elif speed < 0:
+        #Achteruit
+        GPIO.output(IN1, GPIO.LOW)
+        GPIO.output(IN2, GPIO.HIGH)
+        pwm_ena.ChangeDutyCycle (abs(speed))
+    else:
+        #Stop
+        GPIO.output(IN1, GPIO.LOW)
+        GPIO.output(IN2, GPIO.LOW)
+        pwm_ena.ChangeDutyCycle(0)
 
-def motor1_backward(speed):
-    GPIO.output(IN1, GPIO.LOW)
-    GPIO.output(IN2, GPIO.HIGH)
-    pwm_ena.ChangeDutyCycle(speed)
-
-def motor1_brake():
-    GPIO.output(IN1, GPIO.LOW)
-    GPIO.output(IN2, GPIO.LOW)
-    pwm_ena.ChangeDutyCycle(0)
-
-def motor2_forward(speed):
-    GPIO.output(IN3, GPIO.HIGH)
-    GPIO.output(IN4, GPIO.LOW)
-    pwm_enb.ChangeDutyCycle(speed)
-
-def motor2_backward(speed):
-    GPIO.output(IN3, GPIO.LOW)
-    GPIO.output(IN4, GPIO.HIGH)
-    pwm_enb.ChangeDutyCycle(speed)
-
-def motor2_brake():
-    GPIO.output(IN3, GPIO.LOW)
-    GPIO.output(IN4, GPIO.LOW)
-    pwm_enb.ChangeDutyCycle(0)
+def set_motor_right(speed):
+    """
+    Stuurt rechter motoren aan
+    speed: waarde tussen -100 en 100
+    """
+    if speed > 0: 
+        #Vooruit
+        GPIO.output(IN3, GPIO.HIGH)
+        GPIO.output(IN4, GPIO.LOW)
+        pwm_enb.ChangeDutyCycle(speed)
+    elif speed < 0:
+        #Achteruit
+        GPIO.output(IN3, GPIO.LOW)
+        GPIO.output(IN4, GPIO.HIGH)
+        pwm_enb.ChangeDutyCycle (abs(speed))
+    else:
+        #Stop
+        GPIO.output(IN3, GPIO.LOW)
+        GPIO.output(IN4, GPIO.LOW)
+        pwm_enb.ChangeDutyCycle(0)
 
 class MyController(Controller):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        #We houden de stand van gas en sturen bij
+        self.throttle = 0
+        self.steering = 0
 
-        self.speed = 0   # store current speed for smooth updates
+    def update_motors(self):
+        """
+        Berekent de snelheid voor links en rechts op basis van throttle en steering.
+        """
+        #Links = Gas + Stuur
+        #Rechts = Gas - Stuur
+        left_speed = self.throttle + self.steering
+        right_speed = self.throttle - self.steering
 
-    # ----------------------------
-    # L3 LEFT/RIGHT → Motor control
-    # Left:  negative value  (-32768..0)
-    # Right: positive value   (0..32767)
-    # ----------------------------
+        #Waarden niet boven 100 of onder -100
+        left_speed = max(min(left_speed, 100), -100)
+        right_speed = max(min(right_speed, 100), -100)
+
+        #Stuur de motoren aan
+        set_motor_left(left_speed)
+        set_motor_right(right_speed)
+        
+    def on_L3_up(self, value):
+        #Value is -32767 (vol omhoog) tot 0. Omgezet tot 0-100
+        self.throttle = int(abs(value) / 32767 * 100)
+        self.update_motors()
+
+    def on_L3_down(self, value):
+        #Voor deze value geldt hetzelfde als bij on_L3_up
+        self.throttle = -int(value / 32767 * 100)
+        self.update_motors()
+
+    def on_L3_y_at_rest(self):
+        #Joystick lostaten (geen gas)
+        self.throttle = 0
+        self.update_motors()
+
+    #L3 Links / Rechts (Sturen)
+
     def on_L3_left(self, value):
-        """
-        Stick moved left.
-        value ranges from -32768 to 0, we convert to a positive speed.
-        """
-        speed = int(abs(value) / 32767 * 100)  # convert stick value to 0-100%
-        motor1_backward(speed)
-        motor2_backward(speed)
+        #Naar links sturen: Links langzamer, rechts sneller
+        #Negatieve waarde geconverteerd naar -100 tot 0
+        steering_val = int(abs(value) / 32767 * 100)
+        self.steering = -steering_val #Links is negatieve waarde
+        self.update_motors()
 
     def on_L3_right(self, value):
-        """
-        Stick moved right.
-        value ranges from 0 to 32767 → convert to 0-100%.
-        """
-        speed = int(value / 32767 * 100)
-        motor1_forward(speed)
-        motor2_forward(speed)
+        #Naar rechts sturen
+        steering_val = int(value / 32767 * 100)
+        self.steering = steering_val
+        self.update_motors()
 
     def on_L3_x_at_rest(self):
-        """Joystick released → stop motor"""
-        motor1_brake()
-        motor2_brake()
+        #Joystick losgelaten (Niet sturen)
+        self.steering = 0
+        self.update_motors()
 
-    # Optional: pressing L3 fully stops motor
     def on_L3_press(self):
-        motor1_brake()
-        motor2_brake()
+        #Noodstop als de stick wordt ingedrukt
+        self.throttle = 0
+        self.steering = 0
+        self.update_motors()
 
 try:
     controller = MyController(interface="/dev/input/js0", connecting_using_ds4drv=False)
+    print("Controller verbonden. Gebruik L3 om te rijden.")
     controller.listen(timeout=60)
 
 except KeyboardInterrupt:
-    print("Interrupted by user.")
+    print("Onderbroken door gebruiker.")
 
 finally:
     pwm_ena.stop()

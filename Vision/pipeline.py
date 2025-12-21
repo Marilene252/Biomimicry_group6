@@ -2,8 +2,39 @@ import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 import sys
-sys.path.append('/home/marilene/github/Biomimicry_group6')
-from distance_sensor import get_distance_mm
+from gpiozero import DistanceSensor
+from time import sleep
+import time
+
+Trigger = 23
+Echo = 24  
+sensor = DistanceSensor(echo=24, trigger=23, max_distance=4)
+
+def get_distance_mm(duration=5.0, tolerance_mm=2.0):
+    sensor = DistanceSensor(echo=Echo, trigger=Trigger, max_distance=4)
+    try:
+        readings = []
+        start = time()
+
+        while time() - start < duration:
+            d = sensor.distance * 1000  
+            if d > 0:
+                readings.append(d)
+            sleep(0.1)
+
+        readings = np.array(readings)
+        median = np.median(readings)
+        stable = readings[np.abs(readings - median) < tolerance_mm]
+
+        if len(stable) < 5:
+            raise RuntimeError("Distance not stable")
+
+        return np.mean(stable)
+
+    finally:
+        sensor.close()  
+        print("Sensor closed, GPIO pins released.")
+
 
 def grayscale(path):
     """Load image from path and convert to grayscale."""
@@ -146,7 +177,8 @@ def show_full_segmentation(path):
     return segmented, markers
 
 
-if __name__ == "__main__":
-    path = '/home/marilene/github/Biomimicry_group6/Vision/sand_pictures/sandsnap.jpg'
-    show_full_segmentation(path)
+#if __name__ == "__main__":
+ #   path = '/home/marilene/github/Biomimicry_group6/Vision/sand_pictures/sandsnap.jpg'
+  #  show_full_segmentation(path)
 
+#67.3 mmS

@@ -1,0 +1,55 @@
+libraries used:
+
+1. Standard Python libraries (built-in, no installation needed)
+time
+random
+sys
+os
+threading
+csv
+datetime
+sleep (from time)
+
+2️. Numerical / scientific / plotting
+numpy
+matplotlib.pyplot
+
+3️. Hardware / Raspberry Pi specific
+RPi.GPIO
+smbus (SMBus)
+board
+busio
+adafruit_lsm9ds1
+serial (pyserial)
+gpiozero
+pigpio python3-pigpio
+
+
+4️. Controller
+pyPS4Controller (Controller)
+
+5️. Computer vision
+cv2 (OpenCV)
+rpicam-apps
+
+6️. Project-specific / local imports
+distance_sensor (from /home/marilene/github/Biomimicry_group6)
+apt-get update
+apt-get install -y python3-venv
+python3 -m venv rosenv
+source rosenv/bin/activate
+
+docker:
+docker run -it --net=host --privileged -v /home/rapi6/Biomimicry_group6:/work ros:jazzy bash
+
+virtual env:
+cd /work
+source rosenv/bin/activate
+
+picture:
+rpicam-still -o image.jpg
+rpicam-still -o /home/rapi6/Biomimicry_group6/Vision/sand_pictures/$(date +%Y%m%d_%H%M%S).jpg
+
+
+
+
