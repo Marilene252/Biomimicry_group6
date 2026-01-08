@@ -1,4 +1,0 @@
-[console_scripts]
-imu_test_listener = imu_pkg.listen:main
-imu_test_publisher = imu_pkg.publish:main
-
