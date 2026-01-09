@@ -10,11 +10,11 @@ def get_distance_mm(duration=3.0):
         readings = []
         start = time.time()
         while time.time() - start < duration:
-            readings.append(sensor.distance * 1000)  # meters → mm
-            time.sleep(0.01)  # small delay to stabilize readings
+            readings.append(sensor.distance * 1000)  
+            time.sleep(0.01)  
         return sum(readings) / len(readings)
     finally:
-        sensor.close()  # release GPIO pins
+        sensor.close() 
 
 if __name__ == "__main__":
     distance = get_distance_mm(duration=3.0)
