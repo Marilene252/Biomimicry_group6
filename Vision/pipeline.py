@@ -3,21 +3,23 @@ import numpy as np
 import matplotlib.pyplot as plt
 import sys
 from gpiozero import DistanceSensor
-from time import sleep
-import time
+from time import time, sleep
 
 Trigger = 23
 Echo = 24  
-sensor = DistanceSensor(echo=24, trigger=23, max_distance=4)
+sensor = DistanceSensor(echo=Echo, trigger=Trigger, max_distance=4)
 
-def get_distance_mm(duration=5.0, tolerance_mm=2.0):
-    sensor = DistanceSensor(echo=Echo, trigger=Trigger, max_distance=4)
-    try:
+def get_distance_mm(duration=5.0, tolerance_mm=2.0, max_mm=300):
+    """
+    Measure stable distance in mm.
+    Repeats measurement if distance is larger than max_mm.
+    """
+    while True:
         readings = []
         start = time()
 
         while time() - start < duration:
-            d = sensor.distance * 1000  
+            d = sensor.distance * 1000  # convert to mm
             if d > 0:
                 readings.append(d)
             sleep(0.1)
@@ -27,13 +29,16 @@ def get_distance_mm(duration=5.0, tolerance_mm=2.0):
         stable = readings[np.abs(readings - median) < tolerance_mm]
 
         if len(stable) < 5:
-            raise RuntimeError("Distance not stable")
+            print("Distance not stable, retrying...")
+            continue
 
-        return np.mean(stable)
+        distance_mm = np.mean(stable)
 
-    finally:
-        sensor.close()  
-        print("Sensor closed, GPIO pins released.")
+        if distance_mm > max_mm:
+            print(f"Distance {distance_mm:.1f} mm > {max_mm} mm, retrying...")
+            continue
+
+        return distance_mm
 
 
 def grayscale(path):
@@ -177,8 +182,8 @@ def show_full_segmentation(path):
     return segmented, markers
 
 
-#if __name__ == "__main__":
- #   path = '/home/marilene/github/Biomimicry_group6/Vision/sand_pictures/sandsnap.jpg'
-  #  show_full_segmentation(path)
+if __name__ == "__main__":
+    path = '/home/rapi6/Biomimicry_group6/Vision/sand_pictures/sandsnap.jpg'
+    show_full_segmentation(path)
 
 #67.3 mmS

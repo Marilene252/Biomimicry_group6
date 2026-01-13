@@ -1,5 +1,0 @@
-[console_scripts]
-imu_publisher = imu_pkg.imu_publisher:main
-listener = imu_pkg.listen:main
-publisher = imu_pkg.publish:main
-

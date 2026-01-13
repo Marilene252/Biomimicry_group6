@@ -19,11 +19,13 @@ RPi.GPIO
 smbus (SMBus)
 board
 busio
-adafruit_lsm9ds1
 serial (pyserial)
 gpiozero
 pigpio python3-pigpio
-
+adafruit_bno055
+adafruit_sht31d
+adafruit-circuitpython-gps pyserial
+DFRobot_RaspberryPi_A02YYUW (github repo)
 
 4️. Controller
 pyPS4Controller (Controller)
@@ -46,10 +48,18 @@ virtual env:
 cd /work
 source rosenv/bin/activate
 
+# Build ROS 2 workspace
+colcon build
+
+# Source the setup file
+source install/setup.bash
+
 picture:
 rpicam-still -o image.jpg
+rpicam-hello -t 0
 rpicam-still -o /home/rapi6/Biomimicry_group6/Vision/sand_pictures/$(date +%Y%m%d_%H%M%S).jpg
 
-
+i2c:
+i2cdetect -y 1
 
 
