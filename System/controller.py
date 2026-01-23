@@ -1,81 +1,95 @@
 from pyPS4Controller.controller import Controller
 import RPi.GPIO as GPIO
 import time
-import subprocess
+import subprocess 
 import sys
 
 TEMP_HUM_SCRIPT = "/home/rapi6/Biomimicry_group6/System/hum_temp.py"
 IMAGE_CAPTURE_SCRIPT = "/home/rapi6/Biomimicry_group6/System/pipeline_image_capture.py"
 
 
-IN1 = 20
-IN2 = 21
-ENA = 26   # PWM pin for motor 1
+L_RPWM = 4
+L_LPWM = 17 #  PWM pin for motor 1 (Brown Wheels)
+#Enable pins
+M1_L_EN = 27
+M1_R_EN = 22
 
-IN3 = 6
-IN4 = 13
-ENB = 12   # PWM pin for motor 2
+R_RPWM = 6
+R_LPWM = 5  # PWM pin for motor 2 (Pink wheels)
+# Enable pins
+M2_L_EN = 13
+M2_R_EN = 19
+
 
 GPIO.setmode(GPIO.BCM)
+GPIO.setwarnings(False)
 
-# Motor 1 pins
-GPIO.setup(IN1, GPIO.OUT)
-GPIO.setup(IN2, GPIO.OUT)
-GPIO.setup(ENA, GPIO.OUT)
+GPIO.setup(L_RPWM, GPIO.OUT)
+GPIO.setup(L_LPWM, GPIO.OUT)
+GPIO.setup(R_RPWM, GPIO.OUT)
+GPIO.setup(R_LPWM, GPIO.OUT)
 
-# Motor 2 pins
-GPIO.setup(IN3, GPIO.OUT)
-GPIO.setup(IN4, GPIO.OUT)
-GPIO.setup(ENB, GPIO.OUT)
+# Alles instellen op OUT
+GPIO.setup(M1_L_EN, GPIO.OUT)
+GPIO.setup(M1_R_EN, GPIO.OUT)
+GPIO.setup(M2_L_EN, GPIO.OUT)
+GPIO.setup(M2_R_EN, GPIO.OUT)
+
+# Alles instellen op HIGH
+GPIO.output(M1_L_EN, GPIO.HIGH)
+GPIO.output(M1_R_EN, GPIO.HIGH)
+GPIO.output(M2_L_EN, GPIO.HIGH)
+GPIO.output(M2_R_EN, GPIO.HIGH)
+
 
 # PWM setup
-pwm_ena = GPIO.PWM(ENA, 1000)
-pwm_enb = GPIO.PWM(ENB, 1000)
+pwm_left_fwd = GPIO.PWM(L_RPWM, 1000)
+pwm_left_bwd = GPIO.PWM(L_LPWM, 1000)
 
-pwm_ena.start(0)
-pwm_enb.start(0)
+pwm_right_fwd = GPIO.PWM(R_RPWM, 1000)
+pwm_right_bwd = GPIO.PWM(R_LPWM, 1000)
+
+#Start alles op 0
+pwm_left_fwd.start(0)
+pwm_left_bwd.start(0)
+pwm_right_fwd.start(0)
+pwm_right_bwd .start(0)
 
 def set_motor_left(speed):
     """
-    Stuurt linker motoren aan
+    Stuurt linker BTS7960 aan
     speed: waarde tussen -100 en 100
     """
     if speed > 0: 
         #Vooruit
-        GPIO.output(IN1, GPIO.HIGH)
-        GPIO.output(IN2, GPIO.LOW)
-        pwm_ena.ChangeDutyCycle(speed)
+        pwm_left_fwd.ChangeDutyCycle(speed)
+        pwm_left_bwd.ChangeDutyCycle(0)
     elif speed < 0:
         #Achteruit
-        GPIO.output(IN1, GPIO.LOW)
-        GPIO.output(IN2, GPIO.HIGH)
-        pwm_ena.ChangeDutyCycle (abs(speed))
+        pwm_left_fwd.ChangeDutyCycle(0)
+        pwm_left_bwd.ChangeDutyCycle(abs(speed))
     else:
         #Stop
-        GPIO.output(IN1, GPIO.LOW)
-        GPIO.output(IN2, GPIO.LOW)
-        pwm_ena.ChangeDutyCycle(0)
+        pwm_left_fwd.ChangeDutyCycle(0)
+        pwm_left_bwd.ChangeDutyCycle(0)
 
 def set_motor_right(speed):
     """
-    Stuurt rechter motoren aan
+    Stuurt rechter BTS7960 driver aan
     speed: waarde tussen -100 en 100
     """
     if speed > 0: 
         #Vooruit
-        GPIO.output(IN3, GPIO.HIGH)
-        GPIO.output(IN4, GPIO.LOW)
-        pwm_enb.ChangeDutyCycle(speed)
+        pwm_right_fwd.ChangeDutyCycle(speed)
+        pwm_right_bwd.ChangeDutyCycle(0)
     elif speed < 0:
         #Achteruit
-        GPIO.output(IN3, GPIO.LOW)
-        GPIO.output(IN4, GPIO.HIGH)
-        pwm_enb.ChangeDutyCycle (abs(speed))
+        pwm_right_fwd.ChangeDutyCycle(0)
+        pwm_right_bwd.ChangeDutyCycle(abs(speed))
     else:
         #Stop
-        GPIO.output(IN3, GPIO.LOW)
-        GPIO.output(IN4, GPIO.LOW)
-        pwm_enb.ChangeDutyCycle(0)
+        pwm_right_fwd.ChangeDutyCycle(0)
+        pwm_right_bwd.ChangeDutyCycle(0)
 
 class MyController(Controller):
 
@@ -103,12 +117,10 @@ class MyController(Controller):
         set_motor_right(right_speed)
         
     def on_L3_up(self, value):
-        #Value is -32767 (vol omhoog) tot 0. Omgezet tot 0-100
         self.throttle = int(abs(value) / 32767 * 100)
         self.update_motors()
 
     def on_L3_down(self, value):
-        #Voor deze value geldt hetzelfde als bij on_L3_up
         self.throttle = -int(value / 32767 * 100)
         self.update_motors()
 
@@ -137,22 +149,15 @@ class MyController(Controller):
         self.steering = 0
         self.update_motors()
 
-    def on_L3_press(self):
+    def on_square_press(self):
         #Noodstop als de stick wordt ingedrukt
         self.throttle = 0
         self.steering = 0
         self.update_motors()
 
 
-    def on_circle_press(self):
-        print("O button pressed → Reading temperature & humidity...")
-        try:
-            subprocess.run([sys.executable, TEMP_HUM_SCRIPT], check=True)
-        except subprocess.CalledProcessError as e:
-            print(f"Error running temp/humidity script: {e}")
-
-    def on_cross_press(self):
-        print("X button pressed → Running image capture pipeline...")
+    def on_x_press(self):
+        print("X button pressed, Running image capture pipeline.")
         try:
             subprocess.run([sys.executable, IMAGE_CAPTURE_SCRIPT], check=True)
         except subprocess.CalledProcessError as e:
@@ -162,13 +167,15 @@ class MyController(Controller):
 try:
     controller = MyController(interface="/dev/input/js0", connecting_using_ds4drv=False)
     print("Controller verbonden. Gebruik L3 om te rijden.")
-    controller.listen(timeout=60)
+    controller.listen(timeout=999999)
 
 except KeyboardInterrupt:
     print("Onderbroken door gebruiker.")
 
 finally:
-    pwm_ena.stop()
-    pwm_enb.stop()
+    pwm_left_fwd.stop()
+    pwm_left_bwd.stop()
+    pwm_right_fwd.stop()
+    pwm_right_bwd.stop()
     GPIO.cleanup()
 

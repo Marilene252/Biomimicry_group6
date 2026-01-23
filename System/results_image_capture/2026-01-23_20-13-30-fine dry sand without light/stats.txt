@@ -1,0 +1,33 @@
+=== Grain area statistics (mm²) ===
+D10: 0.01
+D20: 0.01
+D30: 0.01
+D40: 0.01
+D50: 0.01
+D60: 0.01
+D70: 0.02
+D80: 0.02
+D90: 0.02
+D100: 0.07
+M50 (median): 0.01
+Mean area: 0.01
+Std area: 0.01
+CV area: 0.527
+
+=== Equivalent diameter statistics (mm) ===
+D10: 0.09
+D20: 0.10
+D30: 0.11
+D40: 0.12
+D50: 0.13
+D60: 0.14
+D70: 0.15
+D80: 0.16
+D90: 0.17
+D100: 0.29
+M50 (median): 0.13
+
+=== Measurement info ===
+Number of grains: 661
+Measured distance: 64.16 mm
+mm per pixel: 0.020828 mm/px
