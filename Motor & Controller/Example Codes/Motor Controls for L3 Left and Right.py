@@ -12,12 +12,12 @@ ENB = 12   # PWM pin for motor 2 (unused for now)`
 
 GPIO.setmode(GPIO.BCM)
 
-# Motor 1 pins
+# Motors 1 and 2 pins
 GPIO.setup(IN1, GPIO.OUT)
 GPIO.setup(IN2, GPIO.OUT)
 GPIO.setup(ENA, GPIO.OUT)
 
-# Motor 2 pins
+# Motors 3 and 4 pins
 GPIO.setup(IN3, GPIO.OUT)
 GPIO.setup(IN4, GPIO.OUT)
 GPIO.setup(ENB, GPIO.OUT)
@@ -51,17 +51,16 @@ class MyController(Controller):
 
         self.speed = 0   # store current speed for smooth updates
 
-    # ----------------------------
     # L3 LEFT/RIGHT → Motor control
     # Left:  negative value  (-32768..0)
     # Right: positive value   (0..32767)
-    # ----------------------------
+
     def on_L3_left(self, value):
         """
         Stick moved left.
         value ranges from -32768 to 0, we convert to a positive speed.
         """
-        speed = int(abs(value) / 32767 * 100)  # convert stick value to 0-100%
+        speed = int(abs(value) / 32767 * 100)  # Convert stick value to 0-100%
         motor1_backward(speed)
 
     def on_L3_right(self, value):
@@ -76,7 +75,7 @@ class MyController(Controller):
         """Joystick released → stop motor"""
         motor1_brake()
 
-    # Optional: pressing L3 fully stops motor
+    # Pressing L3 fully stops motor
     def on_L3_press(self):
         motor1_brake()
 

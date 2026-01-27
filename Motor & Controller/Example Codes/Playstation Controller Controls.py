@@ -12,7 +12,7 @@ IN4 = 7
 ENB = 9
 
 # Setup GPIO mode
-GPIO.setmode(GPIO.BCM)  # or GPIO.BOARD depending on your wiring
+GPIO.setmode(GPIO.BCM)  
 
 # Setup pins as output
 GPIO.setup(IN1, GPIO.OUT)
@@ -24,14 +24,16 @@ GPIO.setup(IN4, GPIO.OUT)
 GPIO.setup(ENB, GPIO.OUT)
 
 # Create PWM objects for ENA and ENB for motor speed control
-pwm_ena = GPIO.PWM(ENA, 1000)  # Set PWM frequency to 1kHz
+pwm_ena = GPIO.PWM(ENA, 1000) 
 pwm_enb = GPIO.PWM(ENB, 1000)
 
-pwm_ena.start(0)  # Start PWM with 0% duty cycle (motor stopped initially)
+pwm_ena.start(0)  # Start PWM with 0% duty cycle
 pwm_enb.start(0)
 
 
 class MyController(Controller):
+
+    # Playstation controller controls
 
     def __init__(self, **kwargs):
         Controller.__init__(self, **kwargs)
@@ -108,6 +110,8 @@ class MyController(Controller):
     def on_L3_down(self, value):
         print("on_L3_down: {}".format(value))
 
+    # Controls for the Motors
+
     def on_L3_left(self, value):
         GPIO.output(IN1, GPIO.LOW)
         GPIO.output(IN2, GPIO.HIGH)
@@ -116,17 +120,19 @@ class MyController(Controller):
     def on_L3_right(self, value):
         GPIO.output(IN1, GPIO.HIGH)
         GPIO.output(IN2, GPIO.LOW)
-        pwm_ena.ChangeDutyCycle(speed)  # Control motor speed with PWM
+        pwm_ena.ChangeDutyCycle(speed)
+
+    def on_L3_press(self):
+        GPIO.output(IN1, GPIO.LOW)
+        GPIO.output(IN2, GPIO.LOW)
+
+    # Other playstation controller controls
 
     def on_L3_y_at_rest(self):
         print("on_L3_y_at_rest")
 
     def on_L3_x_at_rest(self):
         print("on_L3_x_at_rest")
-
-    def on_L3_press(self):
-        GPIO.output(IN1, GPIO.LOW)
-        GPIO.output(IN2, GPIO.LOW)
 
     def on_L3_release(self):
         print("on_L3_release")
@@ -174,5 +180,5 @@ class MyController(Controller):
         print("on_playstation_button_release")
 
 controller = MyController(interface="/dev/input/js0", connecting_using_ds4drv=False)
-# you can start listening before controller is paired, as long as you pair it within the timeout window
+
 controller.listen(timeout=60)

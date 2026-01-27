@@ -5,7 +5,7 @@ import RPi.GPIO as GPIO
 import time
 import threading
 
-#Pin definities voor de stepper driver (Voorbeeld)
+#Pin definities voor de stepper driver (Voorbeeld
 STEP_PIN = 20
 DIR_PIN = 21
 
@@ -23,7 +23,7 @@ class MyController(Controller):
         self.motor_thread = None
 
     def motor_loop(self):
-        #Deze functie draait op de achtergrond
+        # Loops on the background
         while self.running:
             if self.speed < 0.1:
                 GPIO.output(DIR_PIN, self.direction)
@@ -35,7 +35,7 @@ class MyController(Controller):
                 time.sleep(0.1)
 
     def on_L3_up(self, value):
-        #Snelheid bepalen
+        #Determine speed
         val = abs(value) / 32767
         if val > 0.1:
             self.speed = 0.004 / val

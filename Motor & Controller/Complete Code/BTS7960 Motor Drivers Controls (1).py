@@ -3,18 +3,22 @@ import RPi.GPIO as GPIO
 import time
 
 L_RPWM = 5
-L_LPWM = 17 #  PWM pin for motor 1
-#Enable pins
+L_LPWM = 17 #  PWM pins for motordriver 1
+
+# Enable pins for motordriver 1
+
 M1_L_EN = 6
-M1_R_EN = 27 # PWM pin for motor 1
+M1_R_EN = 27
 
 R_RPWM = 19
-R_LPWM = 16  # PWM pin for motor 2
-# Enable pins
+R_LPWM = 16  # PWM pin for motordriver 2
+
+# Enable pins for motordriver 2
+
 M2_L_EN = 26
 M2_R_EN = 13
 
-
+# Setup GPIO mode
 GPIO.setmode(GPIO.BCM)
 GPIO.setwarnings(False)
 
@@ -23,27 +27,26 @@ GPIO.setup(L_LPWM, GPIO.OUT)
 GPIO.setup(R_RPWM, GPIO.OUT)
 GPIO.setup(R_LPWM, GPIO.OUT)
 
-# Alles instellen op OUT
+# Setup pins as output
 GPIO.setup(M1_L_EN, GPIO.OUT)
 GPIO.setup(M1_R_EN, GPIO.OUT)
 GPIO.setup(M2_L_EN, GPIO.OUT)
 GPIO.setup(M2_R_EN, GPIO.OUT)
 
-# Alles instellen op HIGH
+#Enable motor drivers
 GPIO.output(M1_L_EN, GPIO.HIGH)
 GPIO.output(M1_R_EN, GPIO.HIGH)
 GPIO.output(M2_L_EN, GPIO.HIGH)
 GPIO.output(M2_R_EN, GPIO.HIGH)
 
-
 # PWM setup
-pwm_left_fwd = GPIO.PWM(L_RPWM, 1000)
+pwm_left_fwd = GPIO.PWM(L_RPWM, 1000) # Frequency is set to 1000 Hz
 pwm_left_bwd = GPIO.PWM(L_LPWM, 1000)
 
 pwm_right_fwd = GPIO.PWM(R_RPWM, 1000)
 pwm_right_bwd = GPIO.PWM(R_LPWM, 1000)
 
-#Start alles op 0
+#Start everything on 0
 pwm_left_fwd.start(0)
 pwm_left_bwd.start(0)
 pwm_right_fwd.start(0)
@@ -51,15 +54,15 @@ pwm_right_bwd .start(0)
 
 def set_motor_left(speed):
     """
-    Stuurt linker BTS7960 aan
-    speed: waarde tussen -100 en 100
+    Controls left BTS7960 Motor Driver
+    speed: value between -100 and 100
     """
     if speed > 0: 
-        #Vooruit
+        #Forwards
         pwm_left_fwd.ChangeDutyCycle(speed)
         pwm_left_bwd.ChangeDutyCycle(0)
     elif speed < 0:
-        #Achteruit
+        #Backwards
         pwm_left_fwd.ChangeDutyCycle(0)
         pwm_left_bwd.ChangeDutyCycle(abs(speed))
     else:
@@ -69,15 +72,15 @@ def set_motor_left(speed):
 
 def set_motor_right(speed):
     """
-    Stuurt rechter BTS7960 driver aan
-    speed: waarde tussen -100 en 100
+    Controls right BTS7960 Motor Driver
+    speed: value between -100 and 100
     """
     if speed > 0: 
-        #Vooruit
+        #Forwards
         pwm_right_fwd.ChangeDutyCycle(speed)
         pwm_right_bwd.ChangeDutyCycle(0)
     elif speed < 0:
-        #Achteruit
+        #Backwards
         pwm_right_fwd.ChangeDutyCycle(0)
         pwm_right_bwd.ChangeDutyCycle(abs(speed))
     else:
@@ -89,75 +92,75 @@ class MyController(Controller):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        #We houden de stand van gas en sturen bij
+        #Monitors gas levels and maek adjustments
         self.throttle = 0
         self.steering = 0
 
     def update_motors(self):
         """
-        Berekent de snelheid voor links en rechts op basis van throttle en steering.
+        Calculates the speed for left on right based on Throttle and Steering
         """
-        #Links = Gas + Stuur
-        #Rechts = Gas - Stuur
+        #Links = Throttle + Steering
+        #Rechts = Throttle - Steering
         left_speed = self.throttle + self.steering
         right_speed = self.throttle - self.steering
 
-        #Waarden niet boven 100 of onder -100
+        #Values not above 100 or under -100
         left_speed = max(min(left_speed, 100), -100)
         right_speed = max(min(right_speed, 100), -100)
 
-        #Stuur de motoren aan
+        #Control the Motors
         set_motor_left(left_speed)
         set_motor_right(right_speed)
         
     def on_L3_up(self, value):
-        #Value is -32767 (vol omhoog) tot 0. Omgezet tot 0-100
+        #Value is -32767 (full up) to 0. Converted to 0-100
         self.throttle = int(abs(value) / 32767 * 100)
         self.update_motors()
 
     def on_L3_down(self, value):
-        #Voor deze value geldt hetzelfde als bij on_L3_up
+        #The same applies on this as to on_L3_up
         self.throttle = -int(value / 32767 * 100)
         self.update_motors()
 
     def on_L3_y_at_rest(self):
-        #Joystick lostaten (geen gas)
+        #Joystick loose (no throttle)
         self.throttle = 0
         self.update_motors()
 
-    #L3 Links / Rechts (Sturen)
+    #L3 Left / Right (Steering)
 
     def on_L3_left(self, value):
-        #Naar links sturen: Links langzamer, rechts sneller
-        #Negatieve waarde geconverteerd naar -100 tot 0
+        #Steering to the left: Left slower, right faster
+        #Negative value converterd to -100 to 0
         steering_val = int(abs(value) / 32767 * 100)
-        self.steering = -steering_val #Links is negatieve waarde
+        self.steering = -steering_val #Left is a negevative value
         self.update_motors()
 
     def on_L3_right(self, value):
-        #Naar rechts sturen
+        #Steering to the right
         steering_val = int(value / 32767 * 100)
         self.steering = steering_val
         self.update_motors()
 
     def on_L3_x_at_rest(self):
-        #Joystick losgelaten (Niet sturen)
+        #Joystick loose (No steering)
         self.steering = 0
         self.update_motors()
 
     def on_square_press(self):
-        #Noodstop als de stick wordt ingedrukt
+        #Emergency stop when the square button is pressed
         self.throttle = 0
         self.steering = 0
         self.update_motors()
 
 try:
     controller = MyController(interface="/dev/input/js0", connecting_using_ds4drv=False)
-    print("Controller verbonden. Gebruik L3 om te rijden.")
+    print("Controller connected. Use L3 to drive.")
     controller.listen(timeout=60)
 
 except KeyboardInterrupt:
-    print("Onderbroken door gebruiker.")
+    print("Interrupted by user.")
 
 finally:
     pwm_left_fwd.stop()

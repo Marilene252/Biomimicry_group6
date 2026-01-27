@@ -45,7 +45,7 @@ def motor1_brake():
     GPIO.output(IN1, GPIO.LOW)
     GPIO.output(IN2, GPIO.LOW)
 
-#Voor 2de motor, kan ik de bovenste 3 defs kopiëren
+#For the 2nd motor, I could copy these 3 defs
 
 #Main loop
 try:
