@@ -9,11 +9,11 @@ i2c = busio.I2C(board.SCL, board.SDA)
 sensor = adafruit_sht31d.SHT31D(i2c)
 
 SYSTEM_DIR = '/home/rapi6/Biomimicry_group6/System'
-RESULTS_DIR = os.path.join(SYSTEM_DIR, 'Results')
+RESULTS_DIR = os.path.join(SYSTEM_DIR, 'results_temp_hum')
 os.makedirs(RESULTS_DIR, exist_ok=True)
 
 timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-folder = os.path.join(RESULTS_DIR, f"TempHum_{timestamp}")
+folder = os.path.join(RESULTS_DIR, f"{timestamp}")
 os.makedirs(folder, exist_ok=True)
 
 file_path = os.path.join(folder, 'temperature_humidity.txt')
