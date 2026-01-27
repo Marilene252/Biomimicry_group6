@@ -1,114 +1,109 @@
+# The script shows how the radios work. It has many commands to explain what each line does. Because of these commands this script is also easily to implenent in other scripts.
+
 import serial
 import time
 import random
 import sys
 
-# --- Configuratie Variabelen ---
-SERIAL_PORT = '/dev/ttyUSB0' # Controleer of dit overeenkomt met uw USB-radio
-BAUDRATE = 57600             # Moet overeenkomen met de baudrate van de radio's
-MEASUREMENT_INTERVAL = 1     # Tijd tussen metingen (in seconden)
+# Configuration Variables
+SERIAL_PORT = '/dev/ttyUSB0'
+BAUDRATE = 57600             
+MEASUREMENT_INTERVAL = 1     
 
-# Globale vlag om de meetlus te regelen
+# Global flag to regulate the measuring device
 is_measuring = False 
-# Globale teller voor de simpele test
+# Global counter for the test
 measurement_counter = 0
 
 def setup_serial():
-    """Stelt de seriële verbinding in."""
+    """Sets the serial connection."""
     try:
         ser = serial.Serial(
             port=SERIAL_PORT,
             baudrate=BAUDRATE,
-            timeout=1  # Lees-timeout: bepaalt hoe lang .readline() wacht
+            timeout=1
         )
-        print(f"✅ Seriële poort {SERIAL_PORT} geopend op {BAUDRATE} Baud.")
+        print(f"Serial port {SERIAL_PORT} opened at {BAUDRATE} Baud.")
         return ser
     except serial.SerialException as e:
-        print(f"❌ Fout bij het openen van de seriële poort: {e}")
-        print("Controleer de poortnaam en of de radio is aangesloten.")
+        print(f"Error opening serial port: {e}")
+        print("Check the ort name and whether the radio is connected.")
         sys.exit(1)
 
-# ======================================================================
-# DEZE FUNCTIE BEVAT DE SPECIFIEKE METINGSCODE
-# ======================================================================
 def start_measurement_loop(ser):
     global is_measuring, measurement_counter
     is_measuring = True
     
-    print("--- COMMANDO ONTVANGEN: BEGIN METING ---")
+    print("Command received: Start Measuring")
     
     try:
         while is_measuring:
-            # Vanaf hier de meest simpele metingscode om te testen
+            # Simple measurement code
             
-            # 1. Increment de teller
+            # 1. Counter +1
             measurement_counter += 1
             
-            # 2. Simuleer een willekeurige temperatuur
+            # 2. Simulate a random temperature
             temp_value = 20.0 + random.uniform(-0.5, 0.5)
             
-            # 3. Creëer het dataformaat (simpele tekst)
+            # 3. Create a dataformat 
             data_string = f"MEASUREMENT {measurement_counter}: Temp={temp_value:.2f}C\n"
             
-            # 4. Verzenden via de radio
+            # 4. Send by radio
             ser.write(data_string.encode('utf-8'))
-            print(f"➡️ Verzonden: {data_string.strip()}")
+            print(f"Sent: {data_string.strip()}")
             
-            # 5. Voorkom dat de CPU overbelast raakt
+            # 5. Prevent CPU from overloading
             time.sleep(MEASUREMENT_INTERVAL)
             
     except Exception as e:
-        print(f"Fout tijdens meting: {e}")
+        print(f"Error while measuring: {e}")
     finally:
         is_measuring = False
-        print("--- EINDE METING ---")
-# ======================================================================
+        print("Stop Measuring")
 
 def main():
     ser = setup_serial()
-    print("\nLuistert naar de radio. Stuur 'Start_Meten' of 'Stop_Meten' via PuTTY.")
+    print("\nListen to radio. Send 'Start_Measuring' or 'Stop_Measuring' via PuTTY.")
 
     global is_measuring
     
     while True:
         try:
-            # 1. Lees een regel van de seriële poort (inkomend commando)
+            # 1. Read a line from the searial port (incomming command)
             response = ser.readline()
             
             if response:
-                # Decodeer de ontvangen bytes naar een bruikbare string
+                # Decode the received bytes into a usable string
                 command = response.decode('utf-8').strip()
-                print(f"\n⬅️ Commando ontvangen: {command}")
+                print(f"\nCommand received: {command}")
                 
-                # 2. Reageer op het commando
-                if command == "Start_Meten" and not is_measuring:
-                    # Start de metingen
+                # 2. Respond to the command
+                if command == "Start_Measuring" and not is_measuring:
                     start_measurement_loop(ser) 
                     
-                elif command == "Stop_Meten":
-                    # Zet de vlag om de meetlus te beëindigen
+                elif command == "Stop_Measuring":
                     if is_measuring:
                         is_measuring = False
                 
                 elif command == "Status":
-                    # Terugkoppeling sturen naar de laptop
-                    status_msg = f"STATUS: Metingen actief: {is_measuring}, Laatste teller: {measurement_counter}"
+                    status_msg = f"STATUS: Measurements active: {is_measuring}, Laatste teller: {measurement_counter}"
                     ser.write((status_msg + "\n").encode('utf-8'))
-                    print(f"➡️ Status verzonden: {status_msg}")
-            
-            # Zorg ervoor dat de hoofdloop niet vastloopt, zelfs als er geen data binnenkomt
+                    print(f"➡️ Status sent: {status_msg}")
+
+            # Main loop can not be stuck
             time.sleep(0.1) 
 
         except KeyboardInterrupt:
-            print("\nProgramma gestopt door gebruiker.")
+            print("\nProgram stopped by user.")
             break
         except Exception as e:
-            print(f"\nEr is een onverwachte fout opgetreden in de hoofdloop: {e}")
+            print(f"\nAn unexpected error has occured in the main loop: {e}")
             break
     
     if ser.is_open:
         ser.close()
-        print("Seriële poort gesloten.")
+        print("Serial port closed.")
 
 if __name__ == "__main__":
     main()

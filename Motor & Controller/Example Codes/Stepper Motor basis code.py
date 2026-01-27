@@ -1,4 +1,4 @@
-#Stepper Motor
+#This script is never used, but it has the basics for controlling a Stepper Motor. When a team in the future would like to implement stepper motors for the robot they could use this code as a startingpoint.
 
 from pyPS4Controller.controller import Controller
 import RPi.GPIO as GPIO

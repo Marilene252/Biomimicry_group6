@@ -1,3 +1,5 @@
+# This Script exlains how to put the Motors on and how the PS4 controller can control the motors, so the robot can drive forwards and backwards
+
 from pyPS4Controller.controller import Controller
 import RPi.GPIO as GPIO
 import time
@@ -72,7 +74,7 @@ class MyController(Controller):
         motor1_forward(speed)
 
     def on_L3_x_at_rest(self):
-        """Joystick released → stop motor"""
+        """Joystick released: stop motor"""
         motor1_brake()
 
     # Pressing L3 fully stops motor

@@ -1,4 +1,4 @@
-#Python Robotic DC motors
+#This Script explains how DC motors are controlled by a PS4 controller. This script also includes many comments so everything is clear and easily to implement in other scripts.
 
 import RPi.GPIO as GPIO
 import time

@@ -1,3 +1,5 @@
+#In this script everything from the example codes is implemented. Now, the BTS7960 motor drivers are working and the robot drives because of this complete script.
+
 from pyPS4Controller.controller import Controller
 import RPi.GPIO as GPIO
 import time

@@ -1,3 +1,5 @@
+#This script shows the full pyPS4Controller library and some controls are connected to the motor drivers. This script is handy for implementing PS4 controls in other scripts.
+
 from pyPS4Controller.controller import Controller
 import RPi.GPIO as GPIO
 import time
