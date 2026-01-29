@@ -37,7 +37,7 @@ Used for data processing and visualization:
 3. Raspberry Pi & Hardware Libraries
 These libraries interface with sensors, motors and communication hardware:
 
-- RPi.GPIO
+- rpi-lgpio
 - gpiozero
 - pigpio / python3-pigpio
 - smbus / SMBus
