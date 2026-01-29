@@ -171,3 +171,5 @@ Once connected, navigate to the project directory by running this command:
 ```bash
 cd /home/rapi6/Biomimicry_group6
 ```
+
+See Manual for username and password.
