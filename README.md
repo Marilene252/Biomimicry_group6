@@ -1,10 +1,10 @@
-# Biomimicry_group6
+# Optisands Biomimicry
 
 This repository contains the full software stack developed for our biomimetic research robot designed for coastal and beach environments. The robot is intended to autonomously collect environmental data such as:
 
-Air temperature and humidity
+- Air temperature and humidity
 
-Sand grain distribution based on size
+- Sand grain distribution based on size
 
 The software integrates multiple sensors, motor control systems, a PlayStation controller interface and a computer-vision pipeline running on a Raspberry Pi 5.
 
@@ -18,51 +18,51 @@ This repository is accessed via SSH authentication. Before cloning, make sure yo
 1. Standard Python Libraries
 These are built into Python that were used:
 
-time, sleep
-random
-sys
-os
-threading
-csv
-datetime
+- time, sleep
+- random
+- sys
+- os
+- threading
+- csv
+- datetime
 
 
 2. Numerical and Plotting Libraries
 Used for data processing and visualization:
 
-numpy
-matplotlib.pyplot
+- numpy
+- matplotlib.pyplot
 
 
 3. Raspberry Pi & Hardware Libraries
 These libraries interface with sensors, motors and communication hardware:
 
-RPi.GPIO
-gpiozero
-pigpio / python3-pigpio
-smbus / SMBus
-board
-busio
-serial (pyserial)
+- RPi.GPIO
+- gpiozero
+- pigpio / python3-pigpio
+- smbus / SMBus
+- board
+- busio
+- serial (pyserial)
 
 Sensor-specific libraries:
 
-adafruit_bno055
-adafruit_sht31d
-adafruit-circuitpython-gps
-DFRobot_RaspberryPi_A02YYUW (clone gitHub repository)
+- adafruit_bno055
+- adafruit_sht31d
+- adafruit-circuitpython-gps
+- DFRobot_RaspberryPi_A02YYUW (clone gitHub repository)
 
 
 4. Controller
 Used for manual operation:
 
-pyPS4Controller
+- pyPS4Controller
 
 5. Computer Vision
 Used for image capture and shoreline analysis:
 
-cv2 (OpenCV)
-rpicam-apps
+- cv2 (OpenCV)
+- rpicam-apps
 
 6. Environment Setup
 A Python virtual environment is used:
@@ -104,11 +104,11 @@ These helped tune the motor drivers and the controller.
 ### Final System Folder – system/
 This folder contains the final production-ready scripts used on the deployed robot:
 
-Humidity and temperature sensor integration
-PlayStation controller interface with motor control software
-PlayStation controller interface without motor control software
-Image capture pipeline
-result files
+- Humidity and temperature sensor integration
+- PlayStation controller interface with motor control software
+- PlayStation controller interface without motor control software
+- Image capture pipeline
+- Result files
 
 These files were executed during real-world field experiments.
 
