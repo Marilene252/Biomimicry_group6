@@ -13,7 +13,7 @@ M1_L_EN = 6
 M1_R_EN = 27
 
 R_RPWM = 19
-R_LPWM = 16  # PWM pin for motordriver 2
+R_LPWM = 16  # PWM pins for motordriver 2
 
 # Enable pins for motordriver 2
 
@@ -94,7 +94,7 @@ class MyController(Controller):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        #Monitors gas levels and maek adjustments
+        #Monitors gas levels and make adjustments
         self.throttle = 0
         self.steering = 0
 
@@ -102,8 +102,8 @@ class MyController(Controller):
         """
         Calculates the speed for left on right based on Throttle and Steering
         """
-        #Links = Throttle + Steering
-        #Rechts = Throttle - Steering
+        #Left = Throttle + Steering
+        #Right = Throttle - Steering
         left_speed = self.throttle + self.steering
         right_speed = self.throttle - self.steering
 
