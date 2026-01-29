@@ -82,6 +82,13 @@ Some hardware-specific libraries are installed directly on Raspberry Pi OS.
 ## Repository Structure
 The repository is organized to separate experimental code from the final operational system.
 
+### DFRobot A02YYUW library submodule
+The ultrasonic water-level sensor (DFRobot A02YYUW) does not provide a package that can be installed directly via pip. To use this sensor, its Python library must be cloned manually from the manufacturer’s GitHub repository.
+
+```bash
+sudo git clone https://github.com/DFRobot/DFRobot_RaspberryPi_A02YYUW
+```
+
 ### Testing - Testing & unused scripts/
 
 Sensors/
