@@ -150,9 +150,29 @@ To list all running Python processes:
 ```bash
 ps aux | grep python
 ```
-
 To terminate a process:
 
 ```bash
 kill -9 PID
+```
+
+## SSH connection
+
+To connect your laptop to the Raspberry Pi 5 via SSH, enter the following command in your terminal:
+
+```bash
+ssh rapi6@10.42.0.179
+```
+
+First you need to enter yes and after that you will be asked to enter your password. Please note that the characters will not appear on the screen while you type.
+
+Once connected, navigate to the project directory by running this command:
+
+```bash
+cd /home/rapi6/Biomimicry_group6
+```
+
+
+```bash
+cd \home\rapi6\Biomimicry_group6
 ```
