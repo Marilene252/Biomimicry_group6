@@ -164,15 +164,10 @@ To connect your laptop to the Raspberry Pi 5 via SSH, enter the following comman
 ssh rapi6@10.42.0.179
 ```
 
-First you need to enter yes and after that you will be asked to enter your password. Please note that the characters will not appear on the screen while you type.
+After entering this command, you will be asked if you are sure you want to coninue connecting. Type yes and press enter. Next, you will be asked for you password. Please not the the characters will not appear on the screen while you type.
 
 Once connected, navigate to the project directory by running this command:
 
 ```bash
 cd /home/rapi6/Biomimicry_group6
-```
-
-
-```bash
-cd \home\rapi6\Biomimicry_group6
 ```
