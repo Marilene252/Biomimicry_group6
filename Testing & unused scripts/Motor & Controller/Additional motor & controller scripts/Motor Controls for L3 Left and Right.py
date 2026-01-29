@@ -9,11 +9,11 @@ import time
 
 IN1 = 20
 IN2 = 21
-ENA = 26   # PWM pin for motor 1
+ENA = 26   # PWM pins for motor 1
 
 IN3 = 6
 IN4 = 13
-ENB = 12   # PWM pin for motor 2 (unused for now)`
+ENB = 12   # PWM pins for motor 2 (unused for now)`
 
 GPIO.setmode(GPIO.BCM)
 

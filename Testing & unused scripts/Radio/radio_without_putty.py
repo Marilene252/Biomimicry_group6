@@ -44,7 +44,7 @@ def listen_to_radio(ser, csv_writer, csv_file_handle):
                     if len(line) > 0:
                         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                         
-                        # Splitsing incomming data
+                        # Splits incomming data
                         data_sharing = line.split(',') 
                         
                         rij = [timestamp] + data_sharing

@@ -9,7 +9,7 @@ import RPi.GPIO as GPIO
 import time
 import threading
 
-#Pin definities voor de stepper driver (Voorbeeld
+#Pin definitions for the stepper driver (Example)
 STEP_PIN = 20
 DIR_PIN = 21
 

@@ -30,7 +30,7 @@ def setup_serial():
         return ser
     except serial.SerialException as e:
         print(f"Error opening serial port: {e}")
-        print("Check the ort name and whether the radio is connected.")
+        print("Check the port name and whether the radio is connected.")
         sys.exit(1)
 
 def start_measurement_loop(ser):
@@ -90,7 +90,7 @@ def main():
                         is_measuring = False
                 
                 elif command == "Status":
-                    status_msg = f"STATUS: Measurements active: {is_measuring}, Laatste teller: {measurement_counter}"
+                    status_msg = f"STATUS: Measurements active: {is_measuring}, Last counter: {measurement_counter}"
                     ser.write((status_msg + "\n").encode('utf-8'))
                     print(f"Status sent: {status_msg}")
 
