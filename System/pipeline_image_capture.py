@@ -1,3 +1,34 @@
+"""
+Sand grain analysis pipeline.
+
+This script captures an image of sand grains using an ultrasonic sensor
+to measure distance, then processes the image to segment individual grains
+using adaptive thresholding, morphological cleanup, and watershed segmentation.
+
+It computes grain areas and equivalent diameters, generates statistics 
+(percentiles, median, mean, CV), saves processed images, histograms, and CSV files.
+
+Functions:
+- get_distance_mm: Measure stable distance from ultrasonic sensor.
+- create_run_folder: Create timestamped folders for raw and processed images.
+- take_picture: Capture and save an image.
+- grayscale: Convert image to grayscale.
+- morphological_cleanup: Remove noise and fill small holes.
+- adaptive_threshold: Apply adaptive Gaussian thresholding.
+- create_markers: Generate markers for watershed.
+- apply_watershed: Segment grains using watershed.
+- compute_grain_size_pixels: Compute grain areas.
+- compute_mm_per_pixel: Calculate mm per pixel using camera geometry.
+- run_pipeline: Full capture, processing, analysis, and saving of results.
+
+Results include:
+- Segmented images
+- Processing step figures
+- Grain size histograms
+- CSVs of grain areas and diameters
+- Text summary of statistics
+"""
+
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
@@ -7,9 +38,33 @@ from datetime import datetime
 from gpiozero import DistanceSensor
 from time import time, sleep
 
-# --- Ultrasonic sensor setup ---
+Trigger = 23
+Echo = 24
+sensor = DistanceSensor(echo=Echo, trigger=Trigger, max_distance=4)
 
-# --- Helper functions ---
+def get_distance_mm(duration=3.0, tolerance_mm=2.0, max_mm=300):
+    """Measure stable distance in mm using ultrasonic sensor."""
+    while True:
+        readings = []
+        start = time()
+        while time() - start < duration:
+            d = sensor.distance * 1000
+            if d > 0: readings.append(d)
+            sleep(0.1)
+
+        readings = np.array(readings)
+        median = np.median(readings)
+        stable = readings[np.abs(readings - median) < tolerance_mm]
+
+        if len(stable) < 5:
+            print("Distance not stable, retrying...")
+            continue
+
+        distance_mm = np.mean(stable)
+        if distance_mm > max_mm:
+            print(f"Distance {distance_mm:.1f} mm > {max_mm} mm, retrying...")
+            continue
+        return distance_mm
 
 def create_run_folder(results_root):
     """Create timestamped run folder with raw/processed subfolders."""
@@ -24,7 +79,7 @@ def create_run_folder(results_root):
 
     return run_folder, raw_dir, processed_dir
 
-# --- Camera capture ---
+# Camera capture
 def take_picture(raw_dir):
     """Take a picture and save in the raw folder."""
     filename = os.path.join(raw_dir, "raw_image.png")
@@ -33,25 +88,29 @@ def take_picture(raw_dir):
     print(f"Picture taken: {filename}")
     return filename
 
-# --- Image processing functions ---
+# Image processing functions
 def grayscale(path):
+    """Load an image from the given path and convert it to grayscale."""
     image = cv2.imread(path)
     if image is None:
         raise FileNotFoundError(f"Image not found at {path}")
     return cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
 def morphological_cleanup(image, kernel_size=3, open_iter=1, close_iter=1):
+    """Remove noise and fill small holes using morphological open and close."""
     kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (kernel_size, kernel_size))
     cleaned = cv2.morphologyEx(image, cv2.MORPH_OPEN, kernel, iterations=open_iter)
     cleaned = cv2.morphologyEx(cleaned, cv2.MORPH_CLOSE, kernel, iterations=close_iter)
     return cleaned
 
 def adaptive_threshold(gray_img):
+    """Apply adaptive Gaussian thresholding to a grayscale image."""
     return cv2.adaptiveThreshold(
         gray_img, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, 15, 2
     )
 
 def create_markers(binary_img):
+    """Create markers for watershed segmentation from a binary image."""
     kernel = np.ones((3, 3), np.uint8)
     opening = cv2.morphologyEx(binary_img, cv2.MORPH_OPEN, kernel, iterations=2)
     sure_bg = cv2.dilate(opening, kernel, iterations=3)
@@ -65,6 +124,7 @@ def create_markers(binary_img):
     return markers, sure_fg, sure_bg, unknown
 
 def apply_watershed(original_img, binary_img):
+    """Apply watershed segmentation to an image using markers from a binary mask."""
     markers, _, _, _ = create_markers(binary_img)
     if len(original_img.shape) == 2:
         original_color = cv2.cvtColor(original_img, cv2.COLOR_GRAY2BGR)
@@ -76,6 +136,7 @@ def apply_watershed(original_img, binary_img):
     return segmented, markers
 
 def compute_grain_size_pixels(markers, pixel_to_mm=None):
+    """Compute grain areas from markers, optionally converting to mm square."""
     unique, counts = np.unique(markers[markers > 1], return_counts=True)
     areas = counts
     if pixel_to_mm:
@@ -83,21 +144,22 @@ def compute_grain_size_pixels(markers, pixel_to_mm=None):
     return areas
 
 def compute_mm_per_pixel(distance_mm, sensor_mm, focal_length_mm, image_pixels):
+    """Calculate millimeters per pixel using camera geometry."""
     return (distance_mm * sensor_mm) / (focal_length_mm * image_pixels)
 
-# --- Full pipeline ---
+# Full pipeline 
 def run_pipeline(system_dir='/home/rapi6/Biomimicry_group6/System', image_path=None):
     results_dir = os.path.join(system_dir, 'results_image_capture')
     os.makedirs(results_dir, exist_ok=True)
 
-    # --- Create run folders ---
+    # Create run folders
     run_folder, raw_dir, processed_dir = create_run_folder(results_dir)
 
-    # --- Take picture if needed ---
+    # Take picture
     if image_path is None:
         image_path = take_picture(raw_dir)
 
-    # --- Load & preprocess ---
+    # Load & preprocess
     gray = grayscale(image_path)
     clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(4, 4))
     clahe_img = clahe.apply(gray)
@@ -106,14 +168,14 @@ def run_pipeline(system_dir='/home/rapi6/Biomimicry_group6/System', image_path=N
     original = cv2.imread(image_path)
     segmented, markers = apply_watershed(original, cleaned)
 
-    # --- Real-world scaling ---
-    distance_mm = 64.16 
+    # Real-world scaling
+    distance_mm = get_distance_mm()
     px_to_mm = compute_mm_per_pixel(distance_mm, 7.9, 6, original.shape[1])
 
     areas_mm2 = compute_grain_size_pixels(markers, pixel_to_mm=px_to_mm)
     diameters_mm = 2 * np.sqrt(areas_mm2 / np.pi)
 
-    # --- Compute percentiles and statistics ---
+    # Compute percentiles and statistics
     percentiles = np.arange(10, 101, 10)
 
     # Areas
@@ -129,17 +191,17 @@ def run_pipeline(system_dir='/home/rapi6/Biomimicry_group6/System', image_path=N
     diameter_stats = dict(zip([f"D{p}" for p in percentiles], diameter_percentiles))
     M50_diam = np.median(diameters_mm)
 
-    # --- Save images ---
+    # Save images
     cv2.imwrite(os.path.join(processed_dir, "segmented.png"), segmented)
 
-    # --- Save a figure of all processing steps ---
+    # Save a figure of all processing steps
     steps = [original, gray, clahe_img, th, cleaned, segmented]
     labels = ["Original", "Grayscale", "CLAHE", "Thresholded", "Morph. Cleaned", "Segmented"]
 
     plt.figure(figsize=(18,3))
     for i, (img, label) in enumerate(zip(steps, labels), start=1):
         plt.subplot(1,6,i)
-        if len(img.shape) == 2:  # grayscale
+        if len(img.shape) == 2:  
             plt.imshow(img, cmap='gray')
         else:
             plt.imshow(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
@@ -161,9 +223,9 @@ def run_pipeline(system_dir='/home/rapi6/Biomimicry_group6/System', image_path=N
     plt.savefig(os.path.join(processed_dir, "grain_histogram.png"))
     plt.close()
 
-    # --- Save stats & CSV ---
+    # Save stats & CSV
     with open(os.path.join(run_folder, "stats.txt"), "w") as f:
-        f.write("=== Grain area statistics (mm²) ===\n")
+        f.write("Grain area statistics (mm²)\n")
         for label, val in area_stats.items():
             f.write(f"{label}: {val:.2f}\n")
         f.write(f"M50 (median): {M50_area:.2f}\n")
@@ -171,12 +233,12 @@ def run_pipeline(system_dir='/home/rapi6/Biomimicry_group6/System', image_path=N
         f.write(f"Std area: {std_area:.2f}\n")
         f.write(f"CV area: {cv_area:.3f}\n\n")
 
-        f.write("=== Equivalent diameter statistics (mm) ===\n")
+        f.write("Equivalent diameter statistics (mm)\n")
         for label, val in diameter_stats.items():
             f.write(f"{label}: {val:.2f}\n")
         f.write(f"M50 (median): {M50_diam:.2f}\n\n")
 
-        f.write("=== Measurement info ===\n")
+        f.write("Measurement info\n")
         f.write(f"Number of grains: {len(areas_mm2)}\n")
         f.write(f"Measured distance: {distance_mm:.2f} mm\n")
         f.write(f"mm per pixel: {px_to_mm:.6f} mm/px\n")
@@ -187,13 +249,13 @@ def run_pipeline(system_dir='/home/rapi6/Biomimicry_group6/System', image_path=N
     np.savetxt(os.path.join(run_folder, "grain_diameters_mm.csv"), diameters_mm,
                delimiter=',', header='grain_diameter_mm', comments='')
 
-    print(f"\n--- RESULTS SAVED ---")
+    print(f"\nRESULTS SAVED")
     print(f"Run folder: {run_folder}")
     print(f"Number of grains: {len(areas_mm2)}")
     print(f"Measured distance: {distance_mm:.2f} mm")
     print(f"mm per pixel: {px_to_mm:.6f} mm/px\n")
 
-    print("=== Grain area percentiles (mm²) ===")
+    print("Grain area percentiles (mm²)")
     for label, val in area_stats.items():
         print(f"{label}: {val:.2f}")
     print(f"M50 (median area): {M50_area:.2f}")
@@ -201,7 +263,7 @@ def run_pipeline(system_dir='/home/rapi6/Biomimicry_group6/System', image_path=N
     print(f"Std area: {std_area:.2f}")
     print(f"CV area: {cv_area:.3f}\n")
 
-    print("=== Grain diameter percentiles (mm) ===")
+    print("Grain diameter percentiles (mm)")
     for label, val in diameter_stats.items():
         print(f"{label}: {val:.2f}")
     print(f"M50 (median diameter): {M50_diam:.2f}")
